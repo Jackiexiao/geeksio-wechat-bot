@@ -5,9 +5,11 @@ from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, Request
 from loguru import logger
 from sqlmodel import Session, select
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from .models import Message, engine, get_session
 
+bot_url = 'https://msg.io.sapling.pro'
 
 def send_message_to_group(msg: str):
     pass
@@ -113,10 +115,7 @@ def count_activities(messages):
 
     return check_in_counts, talk_counts
 
-
-async def daily_task():
-    await asyncio.sleep(seconds_until_midnight())
-
+def daily_task():
     now = datetime.now()
     start_time = int((now - timedelta(days=1)).timestamp())
     end_time = int(now.timestamp())
@@ -128,9 +127,7 @@ async def daily_task():
             send_message_to_group("今日群聊总结：\n" + summary)
 
 
-async def weekly_task():
-    await asyncio.sleep(seconds_until_next_saturday_noon())
-
+def weekly_task():
     now = datetime.now()
     start_time = int((now - timedelta(days=7)).timestamp())
     end_time = int(now.timestamp())
@@ -158,9 +155,9 @@ async def weekly_task():
             )
 
 
-app.add_event_handler(
-    "startup", lambda: asyncio.create_task(repeat_task(60 * 60 * 24, daily_task))
-)  # 24 hours
-app.add_event_handler(
-    "startup", lambda: asyncio.create_task(repeat_task(60 * 60 * 24 * 7, weekly_task))
-)  # 7 days
+@app.on_event('startup')
+def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(daily_task, 'cron', hour=0)  # run daily_task every day at midnight
+    scheduler.add_job(weekly_task, 'cron', day_of_week='sat', hour=12)  # run weekly_task every Saturday at noon
+    scheduler.start()
