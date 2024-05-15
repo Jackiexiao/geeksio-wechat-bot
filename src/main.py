@@ -3,7 +3,7 @@ from fastapi import Depends, FastAPI, Request
 from loguru import logger
 from sqlmodel import Session
 
-from .bot_utils import send_get_group_member_request
+from .bot_utils import send_get_group_member_request, send_message_to_group
 from .models import Message, RoomInfo, get_session
 from .schedule_tasks import daily_task, five_seconds_task, weekly_task
 
@@ -48,7 +48,8 @@ async def save_msg(request: Request, session: Session = Depends(get_session)):
         session.add(message)
         session.commit()
 
-        # user = message.talkerName
-        # msg = message.text
-        # response_msg = f"已收到 用户:{user} 的消息: {msg}"
-        # send_message_to_group(response_msg)
+        if "/test" in message.text:
+            user = message.talkerName
+            msg = message.text
+            response_msg = f"已收到 用户:{user} 的消息: {msg}"
+            send_message_to_group(response_msg)
