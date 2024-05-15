@@ -8,3 +8,7 @@ prd:
 
 client:
 	python client.py
+
+format: # pip install ruff
+	ruff check . --select I --fix
+	ruff format .

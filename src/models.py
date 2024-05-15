@@ -36,6 +36,16 @@ class Message(SQLModel, table=True):
     quoteId: str
 
 
+class RoomInfo(SQLModel, table=True):
+    room_id: str = Field(primary_key=True)
+    members: str  # json string of List[Member]
+
+
+# class Member():
+#     name: str
+#     id: str  # equal to talkerId
+
+
 # 创建数据库引擎
 engine = create_engine("sqlite:///database.db")
 

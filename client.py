@@ -1,4 +1,5 @@
 import requests
+
 from src.models import WechatMessage
 
 url = "http://jackiexiao.com:8012/msg"
