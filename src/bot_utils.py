@@ -1,12 +1,8 @@
-import json
 import os
 from typing import Dict, List
 
 import requests
-from dotenv import load_dotenv
 from loguru import logger
-
-load_dotenv()
 
 bot_url = "https://msg.io.sapling.pro"
 ROOM_ID = os.getenv("ROOM_ID")

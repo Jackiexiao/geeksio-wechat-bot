@@ -1,3 +1,5 @@
+import sys
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, Request
 from loguru import logger
@@ -6,6 +8,17 @@ from sqlmodel import Session
 from .bot_utils import send_get_group_member_request, send_message_to_group
 from .models import Message, RoomInfo, get_session
 from .schedule_tasks import daily_task, five_seconds_task, weekly_task
+
+
+def logger_setting(
+    logfile: str, log_level: str = "INFO", log_file_level: str = "DEBUG"
+):
+    logger.remove()
+    logger.add(sys.stderr, level=log_level)
+    logger.add(logfile, level=log_file_level, rotation="10MB", retention=20)
+
+
+logger_setting("wechat_bot.log", log_level="INFO", log_file_level="DEBUG")
 
 app = FastAPI(
     title="wechat bot msg handler",
@@ -19,9 +32,7 @@ def start_scheduler():
     send_get_group_member_request()
     scheduler = BackgroundScheduler()
     scheduler.add_job(five_seconds_task, "interval", seconds=5)
-    scheduler.add_job(
-        daily_task, "cron", hour=0
-    )  # run daily_task every day at midnight
+    scheduler.add_job(daily_task, "cron", hour="0")
     scheduler.add_job(
         weekly_task, "cron", day_of_week="sat", hour=12
     )  # run weekly_task every Saturday at noon
@@ -48,7 +59,7 @@ async def save_msg(request: Request, session: Session = Depends(get_session)):
         session.add(message)
         session.commit()
 
-        if "/test" in message.text:
+        if "回应我" in message.text:
             user = message.talkerName
             msg = message.text
             response_msg = f"已收到 用户:{user} 的消息: {msg}"

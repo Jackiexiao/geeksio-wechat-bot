@@ -71,7 +71,8 @@ def count_activities(messages: List[Message]):
 def readable_counts(counts: dict):
     astr = ""
     for name, count in counts.items():
-        astr += f"{name}: {count}\n"
+        if name != "Geek's io":
+            astr += f"{name}: {count}\n"
     return astr
 
 
@@ -80,6 +81,7 @@ def five_seconds_task():
 
 
 def daily_task():
+    logger.info("Running daily_task")
     now = datetime.now()
     start_time = int((now - timedelta(days=1)).timestamp() * 1000)
     end_time = int(now.timestamp() * 1000)
@@ -92,12 +94,13 @@ def daily_task():
 
         # for test:
         check_in_counts, talk_counts = count_activities(messages)
-        send_message_to_group(
-            f"本日打卡情况: \n {check_in_counts=} \n\n {talk_counts=}"
-        )
+        msg = f"本日打卡情况: \n\n{readable_counts(check_in_counts)}\n本日聊天次数{readable_counts(talk_counts)}"
+        send_message_to_group(msg)
+    logger.info(msg)
 
 
 def weekly_task():
+    logger.info("Running weekly_task")
     now = datetime.now()
     start_time = int((now - timedelta(days=7)).timestamp() * 1000)
     end_time = int(now.timestamp() * 1000)
@@ -115,12 +118,14 @@ def weekly_task():
         ]
 
         if inactive_members:
-            send_message_to_group("本周不活跃的人： " + ", ".join(inactive_members))
+            inactive_msg = "本周未发言的人： " + ", ".join(inactive_members)
+            send_message_to_group(inactive_msg)
+            logger.info(inactive_msg)
         if less_check_in_members:
-            send_message_to_group(
-                "本周打卡次数小于2次的人： "
-                + ", ".join(
-                    [f"{name}，{count}" for name, count in less_check_in_members]
-                )
+            check_in_msg = "本周打卡次数小于2次的人： " + ", ".join(
+                [f"{name}，{count}" for name, count in less_check_in_members]
             )
+            send_message_to_group(check_in_msg)
+
+            logger.info(check_in_msg)
     send_get_group_member_request()  # refresh group members every week
